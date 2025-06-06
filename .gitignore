@@ -1,24 +1,10 @@
-# dependencies
 node_modules/
-
-# Expo files
 .expo/
-
-# local env files
-.env
-
-# iOS
-ios/Pods/
-ios/build/
-**/xcuserdata/
-**/DerivedData/
-
-# Android
-android/.gradle/
-android/app/build/
-android/.idea/
+.expo-shared/
+*.log
+android/
+ios/
 *.iml
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
+*.apk
+*.keystore
+.env
