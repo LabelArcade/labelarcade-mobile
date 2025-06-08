@@ -115,6 +115,7 @@ export default function TaskScreen({ navigation }) {
   const level = userProfile?.level || 1;
   const score = userProfile?.score || 0;
   const username = userProfile?.username || 'User';
+  const streak = userProfile?.streakCount || 0;
 
   const xpToNextLevel = 50;
   const progress = xpToNextLevel > 0 ? (xp % xpToNextLevel) / xpToNextLevel : 0;
@@ -131,6 +132,14 @@ export default function TaskScreen({ navigation }) {
         <Text style={styles.profileText}>⭐ Level: {level}</Text>
         <Text style={styles.profileText}>⚡ XP: {xp} / {xpToNextLevel}</Text>
         <Text style={styles.profileText}>🥇 Score: {score}</Text>
+        <Text
+          style={[
+            styles.profileText,
+            streak >= 3 && { color: '#FF5722', fontWeight: 'bold' },
+          ]}
+        >
+          🔥 Streak: {streak} days
+        </Text>
         <Progress.Bar
           progress={progress}
           width={null}
