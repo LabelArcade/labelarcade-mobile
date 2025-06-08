@@ -132,14 +132,17 @@ export default function TaskScreen({ navigation }) {
         <Text style={styles.profileText}>⭐ Level: {level}</Text>
         <Text style={styles.profileText}>⚡ XP: {xp} / {xpToNextLevel}</Text>
         <Text style={styles.profileText}>🥇 Score: {score}</Text>
-        <Text
-          style={[
-            styles.profileText,
-            streak >= 3 && { color: '#FF5722', fontWeight: 'bold' },
-          ]}
-        >
-          🔥 Streak: {streak} days
-        </Text>
+
+        {streak > 1 && (
+          <Text style={styles.profileText}>🔥 Streak: {streak} days</Text>
+        )}
+
+        {showLevelUp && (
+          <Text style={[styles.profileText, { color: '#FF9900', fontWeight: 'bold' }]}>
+            🎯 Level Up!
+          </Text>
+        )}
+
         <Progress.Bar
           progress={progress}
           width={null}
