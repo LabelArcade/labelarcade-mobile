@@ -4,18 +4,25 @@ import {
   Text,
   Button,
   StyleSheet,
-  Image,
   Alert,
+  Image,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-
-import { fetchNextTask, submitAnswer } from '../services/api';
+import * as Progress from 'react-native-progress';
+import { fetchNextTask, submitAnswer, getUserProfile } from '../services/api';
+import { logoutUser } from '../services/auth';
+import StreakCelebration from '../components/StreakCelebration';
+import LevelUpCelebration from '../components/LevelUpCelebration';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 export default function TaskScreen({ navigation }) {
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [startTime, setStartTime] = useState(null); // ⏱️ Track start time
+  const [startTime, setStartTime] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [showLevelUp, setShowLevelUp] = useState(false);
 
   const extractLabel = (value) => {
     if (typeof value !== 'object' || value === null) return String(value);
@@ -43,26 +50,47 @@ export default function TaskScreen({ navigation }) {
     }
   };
 
-const handleAnswer = async (choiceKey) => {
-  try {
-    const value = task.task?.choices[choiceKey];
-    const label = extractLabel(value);
+  const loadUserProfile = async () => {
+    try {
+      const profile = await getUserProfile();
+      setUserProfile(profile);
+    } catch (err) {
+      console.error('❌ Failed to load profile', err);
+    }
+  };
 
-    const taskId = task.id;
-    const trackId = task.track_id;
-    const timeTakenInSeconds = Math.floor((Date.now() - startTime) / 1000); // ✅ Use stored startTime
+  const handleAnswer = async (choiceKey) => {
+    try {
+      const value = task.task?.choices[choiceKey];
+      const label = extractLabel(value);
 
-    await submitAnswer(trackId, choiceKey, taskId, timeTakenInSeconds);
-    Alert.alert('Answer Submitted', `You selected: ${label}`);
-    loadTask();
-  } catch (err) {
-    Alert.alert('Error', 'Failed to submit answer.');
-  }
-};
+      const taskId = task.id;
+      const trackId = task.track_id;
+      const timeTakenInSeconds = Math.floor((Date.now() - startTime) / 1000);
 
+      const response = await submitAnswer(trackId, choiceKey, taskId, timeTakenInSeconds);
+      Alert.alert('Answer Submitted', `You selected: ${label}`);
+
+      if (response?.message?.includes('Streak')) {
+        setShowCelebration(true);
+        setTimeout(() => setShowCelebration(false), 3000);
+      }
+
+      if (response?.message?.includes('Level Up')) {
+        setShowLevelUp(true);
+        setTimeout(() => setShowLevelUp(false), 3000);
+      }
+
+      loadTask();
+      loadUserProfile();
+    } catch (err) {
+      Alert.alert('Error', 'Failed to submit answer.');
+    }
+  };
 
   useEffect(() => {
     loadTask();
+    loadUserProfile();
   }, []);
 
   if (loading) {
@@ -83,9 +111,36 @@ const handleAnswer = async (choiceKey) => {
     task: { text, choices } = {},
   } = task;
 
+  const xp = userProfile?.xp || 0;
+  const level = userProfile?.level || 1;
+  const score = userProfile?.score || 0;
+  const username = userProfile?.username || 'User';
+
+  const xpToNextLevel = 50;
+  const progress = xpToNextLevel > 0 ? (xp % xpToNextLevel) / xpToNextLevel : 0;
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>LabelArcade Quiz</Text>
+      <StreakCelebration trigger={showCelebration} />
+      <LevelUpCelebration trigger={showLevelUp} />
+      {showCelebration && <ConfettiCannon count={80} origin={{ x: 200, y: 0 }} fadeOut />}
+      {showLevelUp && <ConfettiCannon count={100} origin={{ x: 100, y: 0 }} fadeOut />}
+
+      <View style={styles.profileBox}>
+        <Text style={styles.profileText}>👤 {username}</Text>
+        <Text style={styles.profileText}>⭐ Level: {level}</Text>
+        <Text style={styles.profileText}>⚡ XP: {xp} / {xpToNextLevel}</Text>
+        <Text style={styles.profileText}>🥇 Score: {score}</Text>
+        <Progress.Bar
+          progress={progress}
+          width={null}
+          height={10}
+          color="#34A853"
+          borderRadius={5}
+          borderWidth={0.5}
+          unfilledColor="#e0e0e0"
+        />
+      </View>
 
       {image?.url && <Image source={{ uri: image.url }} style={styles.image} />}
       <Text style={styles.question}>{text}</Text>
@@ -116,15 +171,21 @@ const handleAnswer = async (choiceKey) => {
         />
       </View>
 
-<View style={styles.historyButtonWrapper}>
-  <Button
-    title="🏆 View Leaderboard"
-    onPress={() => navigation.navigate('Leaderboard')}
-    color="#FF9900"
-  />
-</View>
+      <View style={styles.historyButtonWrapper}>
+        <Button
+          title="🏆 View Leaderboard"
+          onPress={() => navigation.navigate('Leaderboard')}
+          color="#FF9900"
+        />
+      </View>
 
-
+      <View style={styles.historyButtonWrapper}>
+        <Button
+          title="🚪 Logout"
+          onPress={() => logoutUser(navigation)}
+          color="#FF3B30"
+        />
+      </View>
     </ScrollView>
   );
 }
@@ -160,5 +221,15 @@ const styles = StyleSheet.create({
   },
   historyButtonWrapper: {
     marginTop: 30,
+  },
+  profileBox: {
+    backgroundColor: '#eaf3ff',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 20,
+  },
+  profileText: {
+    fontSize: 16,
+    marginBottom: 4,
   },
 });
