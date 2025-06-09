@@ -16,6 +16,14 @@ import StreakCelebration from '../components/StreakCelebration';
 import LevelUpCelebration from '../components/LevelUpCelebration';
 import ConfettiCannon from 'react-native-confetti-cannon';
 
+// Map avatar string paths to local image requires
+const avatarMap = {
+  '../assets/avatar1.png': require('../assets/avatar1.png'),
+  '../assets/avatar2.png': require('../assets/avatar2.png'),
+  '../assets/avatar3.png': require('../assets/avatar3.png'),
+  '../assets/avatar4.png': require('../assets/avatar4.png'),
+};
+
 export default function TaskScreen({ navigation }) {
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,6 +31,23 @@ export default function TaskScreen({ navigation }) {
   const [userProfile, setUserProfile] = useState(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showLevelUp, setShowLevelUp] = useState(false);
+  const [newBadge, setNewBadge] = useState(null);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
+
+  const badgeInfo = {
+    first_task: {
+      title: '🚀 First Submission!',
+      desc: 'You just completed your very first task!',
+    },
+    streak_3: {
+      title: '🔥 3-Day Streak!',
+      desc: 'You’ve submitted tasks 3 days in a row!',
+    },
+    level_5: {
+      title: '🏆 Level 5 Achieved!',
+      desc: 'You’ve reached Level 5 — amazing work!',
+    },
+  };
 
   const extractLabel = (value) => {
     if (typeof value !== 'object' || value === null) return String(value);
@@ -81,6 +106,11 @@ export default function TaskScreen({ navigation }) {
         setTimeout(() => setShowLevelUp(false), 3000);
       }
 
+      if (response?.newBadge) {
+        setNewBadge(response.newBadge);
+        setShowBadgeModal(true);
+      }
+
       loadTask();
       loadUserProfile();
     } catch (err) {
@@ -116,6 +146,7 @@ export default function TaskScreen({ navigation }) {
   const score = userProfile?.score || 0;
   const username = userProfile?.username || 'User';
   const streak = userProfile?.streakCount || 0;
+  const avatar = userProfile?.avatar || '';
 
   const xpToNextLevel = 50;
   const progress = xpToNextLevel > 0 ? (xp % xpToNextLevel) / xpToNextLevel : 0;
@@ -124,25 +155,24 @@ export default function TaskScreen({ navigation }) {
     <ScrollView contentContainerStyle={styles.container}>
       <StreakCelebration trigger={showCelebration} />
       <LevelUpCelebration trigger={showLevelUp} />
-      {showCelebration && <ConfettiCannon count={80} origin={{ x: 200, y: 0 }} fadeOut />}
-      {showLevelUp && <ConfettiCannon count={100} origin={{ x: 100, y: 0 }} fadeOut />}
+      {(showCelebration || showLevelUp || showBadgeModal) && (
+        <ConfettiCannon count={100} origin={{ x: 150, y: 0 }} fadeOut />
+      )}
 
       <View style={styles.profileBox}>
+        {avatar && avatarImages[avatar] && (
+          <Image source={avatarImages[avatar]} style={styles.avatar} />
+        )}
         <Text style={styles.profileText}>👤 {username}</Text>
         <Text style={styles.profileText}>⭐ Level: {level}</Text>
         <Text style={styles.profileText}>⚡ XP: {xp} / {xpToNextLevel}</Text>
         <Text style={styles.profileText}>🥇 Score: {score}</Text>
-
         {streak > 1 && (
           <Text style={styles.profileText}>🔥 Streak: {streak} days</Text>
         )}
-
         {showLevelUp && (
-          <Text style={[styles.profileText, { color: '#FF9900', fontWeight: 'bold' }]}>
-            🎯 Level Up!
-          </Text>
+          <Text style={[styles.profileText, { color: '#FF9900', fontWeight: 'bold' }]}>🎯 Level Up!</Text>
         )}
-
         <Progress.Bar
           progress={progress}
           width={null}
@@ -168,36 +198,27 @@ export default function TaskScreen({ navigation }) {
         })}
 
       <View style={styles.historyButtonWrapper}>
-        <Button
-          title="📊 View Submission History"
-          onPress={() => navigation.navigate('Submissions')}
-          color="#007AFF"
-        />
+        <Button title="📊 View Submission History" onPress={() => navigation.navigate('Submissions')} color="#007AFF" />
+      </View>
+      <View style={styles.historyButtonWrapper}>
+        <Button title="📈 View Average Time Chart" onPress={() => navigation.navigate('AvgTimeChart')} color="#34A853" />
+      </View>
+      <View style={styles.historyButtonWrapper}>
+        <Button title="🏆 View Leaderboard" onPress={() => navigation.navigate('Leaderboard')} color="#FF9900" />
+      </View>
+      <View style={styles.historyButtonWrapper}>
+        <Button title="🚪 Logout" onPress={() => logoutUser(navigation)} color="#FF3B30" />
       </View>
 
-      <View style={styles.historyButtonWrapper}>
-        <Button
-          title="📈 View Average Time Chart"
-          onPress={() => navigation.navigate('AvgTimeChart')}
-          color="#34A853"
-        />
-      </View>
-
-      <View style={styles.historyButtonWrapper}>
-        <Button
-          title="🏆 View Leaderboard"
-          onPress={() => navigation.navigate('Leaderboard')}
-          color="#FF9900"
-        />
-      </View>
-
-      <View style={styles.historyButtonWrapper}>
-        <Button
-          title="🚪 Logout"
-          onPress={() => logoutUser(navigation)}
-          color="#FF3B30"
-        />
-      </View>
+      {showBadgeModal && (
+        <View style={styles.badgeModal}>
+          <View style={styles.badgeContent}>
+            <Text style={styles.badgeTitle}>{badgeInfo[newBadge]?.title}</Text>
+            <Text style={styles.badgeDesc}>{badgeInfo[newBadge]?.desc}</Text>
+            <Button title="Awesome!" onPress={() => setShowBadgeModal(false)} />
+          </View>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -205,12 +226,6 @@ export default function TaskScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
   },
   question: {
     fontSize: 18,
@@ -239,9 +254,42 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     marginBottom: 20,
+    alignItems: 'center'
   },
   profileText: {
     fontSize: 16,
     marginBottom: 4,
+  },
+  badgeModal: {
+    position: 'absolute',
+    top: 100,
+    left: 20,
+    right: 20,
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 10,
+    zIndex: 1000,
+  },
+  badgeContent: {
+    alignItems: 'center',
+  },
+  badgeTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  badgeDesc: {
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginBottom: 10,
   },
 });

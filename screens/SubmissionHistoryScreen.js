@@ -7,11 +7,25 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getSubmissionHistory } from '../services/api';
 
-export default function SubmissionHistoryScreen() {
+export default function SubmissionHistoryScreen({ navigation }) {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuthAndLoad = async () => {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        Alert.alert('Unauthorized', 'Please log in again.');
+        navigation.replace('Login');
+      } else {
+        loadHistory();
+      }
+    };
+    checkAuthAndLoad();
+  }, []);
 
   const loadHistory = async () => {
     try {
@@ -23,10 +37,6 @@ export default function SubmissionHistoryScreen() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    loadHistory();
-  }, []);
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>

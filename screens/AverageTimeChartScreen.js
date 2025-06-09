@@ -1,21 +1,36 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  Alert,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BarChart } from 'react-native-chart-kit';
 import { getSubmissionHistory } from '../services/api';
 
-export default function AverageTimeChartScreen() {
+export default function AverageTimeChartScreen({ navigation }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadHistory = async () => {
     try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        Alert.alert('Session Expired', 'Please login again.');
+        navigation.replace('Login');
+        return;
+      }
+
       const submissions = await getSubmissionHistory();
 
-      // Group by taskId and compute average time
       const grouped = {};
       submissions.forEach(({ taskId, timeTakenInSeconds }) => {
         if (!grouped[taskId]) grouped[taskId] = [];
-        if (timeTakenInSeconds) grouped[taskId].push(timeTakenInSeconds);
+        if (timeTakenInSeconds != null) grouped[taskId].push(timeTakenInSeconds);
       });
 
       const chartData = Object.entries(grouped).map(([taskId, times]) => {
@@ -23,9 +38,9 @@ export default function AverageTimeChartScreen() {
         return { taskId, avgTime: Number(avg.toFixed(2)) };
       });
 
-      setData(chartData.slice(0, 10)); // Only show first 10 for clarity
+      setData(chartData.slice(0, 10)); // Show top 10
     } catch (err) {
-      alert('Failed to load chart data.');
+      Alert.alert('Error', 'Failed to load chart data.');
     } finally {
       setLoading(false);
     }
@@ -69,9 +84,7 @@ export default function AverageTimeChartScreen() {
           decimalPlaces: 2,
           color: () => `#007AFF`,
           labelColor: () => '#333',
-          propsForLabels: {
-            fontSize: 10,
-          },
+          propsForLabels: { fontSize: 10 },
         }}
         verticalLabelRotation={30}
       />

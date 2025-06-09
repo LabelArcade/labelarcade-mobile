@@ -1,43 +1,53 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// 🌐 Backend API base URL
 const API_BASE = 'https://labelarcade-backend-production.up.railway.app/api';
-const TII_API_KEY = 'kt6ZgJC-DnuFaGNvsw3xUSk9D1NA9hFm'; // 🔐 Use env variable in production
 
-// 🔐 Get stored JWT token
+// 🔐 TII API Key (for dev, move to env for prod)
+const TII_API_KEY = 'kt6ZgJC-DnuFaGNvsw3xUSk9D1NA9hFm';
+
+// 🔐 Retrieve stored JWT token
 export const getToken = async () => {
   return await AsyncStorage.getItem('token');
 };
 
-// 🔧 Build auth headers
+// 🧠 Build headers
 const getAuthHeaders = async (contentType = 'application/json') => {
   const token = await getToken();
+
   const headers = {
-    'Authorization': `Bearer ${token}`,
     'x-api-key': TII_API_KEY,
   };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   if (contentType) {
     headers['Content-Type'] = contentType;
   }
+
   return headers;
 };
 
-// 🎯 Fetch next task
+// ✅ Fetch next task from TII
 export const fetchNextTask = async () => {
   const headers = await getAuthHeaders(null);
   const res = await fetch(`${API_BASE}/tasks/next`, { headers });
 
-  if (!res.ok) throw new Error('❌ Failed to fetch next task');
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error('❌ fetchNextTask error body:', errorText);
+    throw new Error('❌ Failed to fetch next task');
+  }
+
   return res.json();
 };
 
-// ✅ Submit answer with taskId and time
+// 📤 Submit task response
 export const submitAnswer = async (track_id, answer, taskId, timeTakenInSeconds) => {
-  const headers = await getAuthHeaders('application/json'); // ✅ Ensure Content-Type is set
-  const body = JSON.stringify({
-    answer,
-    taskId,
-    timeTakenInSeconds,
-  });
+  const headers = await getAuthHeaders();
+  const body = JSON.stringify({ answer, taskId, timeTakenInSeconds });
 
   const res = await fetch(`${API_BASE}/tasks/${track_id}/submit`, {
     method: 'POST',
@@ -45,11 +55,16 @@ export const submitAnswer = async (track_id, answer, taskId, timeTakenInSeconds)
     body,
   });
 
-  if (!res.ok) throw new Error('❌ Failed to submit answer');
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error('❌ submitAnswer error body:', errorText);
+    throw new Error('❌ Failed to submit answer');
+  }
+
   return res.json();
 };
 
-// 📜 Get submission history
+// 📜 Get user's submission history
 export const getSubmissionHistory = async () => {
   const headers = await getAuthHeaders(null);
   const res = await fetch(`${API_BASE}/submissions`, { headers });
@@ -58,7 +73,7 @@ export const getSubmissionHistory = async () => {
   return res.json();
 };
 
-// 📈 Get average submission time
+// 📊 Get average submission time
 export const getAverageSubmissionTime = async () => {
   const headers = await getAuthHeaders(null);
   const res = await fetch(`${API_BASE}/submissions/average-time`, { headers });
@@ -67,11 +82,44 @@ export const getAverageSubmissionTime = async () => {
   return res.json();
 };
 
-// 🏆 Get leaderboard data
+// 🏆 Get leaderboard
 export const getLeaderboard = async () => {
-  const headers = await getAuthHeaders();
-  const res = await fetch(`${API_BASE}/submissions/leaderboard`, { headers });
+  try {
+    const headers = await getAuthHeaders();
 
-  if (!res.ok) throw new Error('❌ Failed to fetch leaderboard');
+    if (__DEV__) {
+      console.log('📡 Sending headers to leaderboard:', headers);
+    }
+
+    const res = await fetch(`${API_BASE}/leaderboard`, { headers });
+
+    if (__DEV__) {
+      console.log('📡 Leaderboard status:', res.status);
+    }
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('❌ getLeaderboard error body:', errorText);
+      throw new Error('❌ Failed to fetch leaderboard');
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error('❌ getLeaderboard error:', error.message);
+    throw error;
+  }
+};
+
+// 👤 Get user profile ✅ (added now)
+export const getUserProfile = async () => {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_BASE}/user/profile`, { headers });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error('❌ getUserProfile error body:', errorText);
+    throw new Error('❌ Failed to fetch user profile');
+  }
+
   return res.json();
 };
