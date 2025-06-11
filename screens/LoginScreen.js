@@ -57,24 +57,50 @@ export default function LoginScreen({ navigation }) {
         autoCapitalize="none"
         onChangeText={setEmail}
         keyboardType="email-address"
+        placeholderTextColor="#888"
       />
       <TextInput
         style={styles.input}
         placeholder="Password"
         secureTextEntry
         onChangeText={setPassword}
+        placeholderTextColor="#888"
       />
       <Button title="Login" onPress={handleLogin} />
       <Text style={styles.link} onPress={() => navigation.navigate('Register')}>
-        Don't have an account? Register
+        Don't have an account? <Text style={{ color: '#007AFF' }}>Register</Text>
       </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, marginTop: 100 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  input: { borderWidth: 1, marginBottom: 12, padding: 8, borderRadius: 4 },
-  link: { color: 'blue', marginTop: 16, textAlign: 'center' }
+  container: {
+    padding: 24,
+    backgroundColor: '#F9FBFF',
+    flexGrow: 1,
+    justifyContent: 'center'
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    textAlign: 'center',
+    color: '#333',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    marginBottom: 14,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    color: '#000', // ✅ makes text visible
+  },
+  link: {
+    marginTop: 20,
+    textAlign: 'center',
+    color: '#444',
+    fontSize: 14,
+  },
 });

@@ -64,22 +64,25 @@ export default function RegisterScreen({ navigation }) {
       <Text style={styles.title}>🎮 Join LabelArcade</Text>
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: '#000' }]}
         placeholder="Email"
         autoCapitalize="none"
         onChangeText={setEmail}
         keyboardType="email-address"
+        placeholderTextColor="#999"
       />
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: '#000' }]}
         placeholder="Username"
         onChangeText={setUsername}
+        placeholderTextColor="#999"
       />
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: '#000' }]}
         placeholder="Password"
         secureTextEntry
         onChangeText={setPassword}
+        placeholderTextColor="#999"
       />
 
       <Text style={styles.label}>🧑 Choose Your Avatar</Text>
