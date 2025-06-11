@@ -14,12 +14,17 @@ import {
 import { getProfile, updateProfile } from '../services/api';
 import XPProgressBar from '../components/XPProgressBar';
 
-const avatarOptions = [
-  require('../assets/avatar1.png'),
-  require('../assets/avatar2.png'),
-  require('../assets/avatar3.png'),
-  require('../assets/avatar4.png'),
+const avatarPaths = [
+  '../assets/avatar1.png',
+  '../assets/avatar2.png',
+  '../assets/avatar3.png',
+  '../assets/avatar4.png',
 ];
+
+const avatarOptions = avatarPaths.map(path => ({
+  path,
+  image: require(path),
+}));
 
 export default function ProfileScreen() {
   const [profile, setProfile] = useState(null);
@@ -49,7 +54,7 @@ export default function ProfileScreen() {
         const data = await getProfile();
         setProfile(data);
         setEditedUsername(data.username);
-        setSelectedAvatar(data.avatar || null);
+        setSelectedAvatar(data.avatar || avatarPaths[0]); // use path
       } catch (err) {
         alert('Failed to fetch profile');
       } finally {
@@ -91,13 +96,16 @@ export default function ProfileScreen() {
 
       <Text style={styles.label}>Choose Avatar</Text>
       <View style={styles.avatarList}>
-        {avatarOptions.map((img, idx) => (
+        {avatarOptions.map(({ path, image }) => (
           <TouchableOpacity
-            key={idx}
-            style={[styles.avatarWrapper, selectedAvatar === img && styles.selectedAvatar]}
-            onPress={() => setSelectedAvatar(img)}
+            key={path}
+            style={[
+              styles.avatarWrapper,
+              selectedAvatar === path && styles.selectedAvatar,
+            ]}
+            onPress={() => setSelectedAvatar(path)}
           >
-            <Image source={img} style={styles.avatarImage} />
+            <Image source={image} style={styles.avatarImage} />
           </TouchableOpacity>
         ))}
       </View>

@@ -31,7 +31,15 @@ export default function RegisterScreen({ navigation }) {
     }
 
     try {
-      const avatarPath = `../assets/avatar${selectedAvatar + 1}.png`;
+      const avatarPaths = [
+  '../assets/avatar1.png',
+  '../assets/avatar2.png',
+  '../assets/avatar3.png',
+  '../assets/avatar4.png',
+];
+
+const avatarPath = avatarPaths[selectedAvatar];
+
       const response = await fetch('https://labelarcade-backend-production.up.railway.app/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

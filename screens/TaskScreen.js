@@ -159,30 +159,32 @@ export default function TaskScreen({ navigation }) {
         <ConfettiCannon count={100} origin={{ x: 150, y: 0 }} fadeOut />
       )}
 
-      <View style={styles.profileBox}>
-        {avatar && avatarImages[avatar] && (
-          <Image source={avatarImages[avatar]} style={styles.avatar} />
-        )}
-        <Text style={styles.profileText}>👤 {username}</Text>
-        <Text style={styles.profileText}>⭐ Level: {level}</Text>
-        <Text style={styles.profileText}>⚡ XP: {xp} / {xpToNextLevel}</Text>
-        <Text style={styles.profileText}>🥇 Score: {score}</Text>
-        {streak > 1 && (
-          <Text style={styles.profileText}>🔥 Streak: {streak} days</Text>
-        )}
-        {showLevelUp && (
-          <Text style={[styles.profileText, { color: '#FF9900', fontWeight: 'bold' }]}>🎯 Level Up!</Text>
-        )}
-        <Progress.Bar
-          progress={progress}
-          width={null}
-          height={10}
-          color="#34A853"
-          borderRadius={5}
-          borderWidth={0.5}
-          unfilledColor="#e0e0e0"
-        />
-      </View>
+      
+<View style={styles.profileBox}>
+  {avatar && avatarMap[avatar] && (
+    <Image source={avatarMap[avatar]} style={styles.avatar} />
+  )}
+  <Text style={styles.profileText}>👤 {username}</Text>
+  <Text style={styles.profileText}>⭐ Level: {level}</Text>
+  <Text style={styles.profileText}>⚡ XP: {xp} / {xpToNextLevel}</Text>
+  <Text style={styles.profileText}>🥇 Score: {score}</Text>
+  {streak > 1 && (
+    <Text style={styles.profileText}>🔥 Streak: {streak} days</Text>
+  )}
+  {showLevelUp && (
+    <Text style={[styles.profileText, { color: '#FF9900', fontWeight: 'bold' }]}>🎯 Level Up!</Text>
+  )}
+  <Progress.Bar
+    progress={progress}
+    width={null}
+    height={10}
+    color="#34A853"
+    borderRadius={5}
+    borderWidth={0.5}
+    unfilledColor="#e0e0e0"
+  />
+</View>
+
 
       {image?.url && <Image source={{ uri: image.url }} style={styles.image} />}
       <Text style={styles.question}>{text}</Text>
